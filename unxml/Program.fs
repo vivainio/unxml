@@ -13,7 +13,7 @@ type StreamEnt =
 type XmlRec = {
     Path : string
     Vals : Dictionary<string,string>
-    Attrs: Dictionary<string,string>
+    //Attrs: Dictionary<string,string>
 }
 
 let p_rec (r:XmlRec) = 
@@ -34,9 +34,15 @@ let readXml (fname:string) =
             match r.NodeType with 
                 | XmlNodeType.Element ->
                     curKey <- r.Name
+
                     yield Path(curKey)
                     while r.MoveToNextAttribute() do 
                         yield Attr(r.Name, r.Value)
+                    r.MoveToElement() |> ignore
+                    if r.IsEmptyElement then
+                        curKey <- ""
+                        yield End(r.Name)
+                                        
                     
                 | XmlNodeType.Text ->
                     yield Val(curKey, r.Value)
@@ -62,31 +68,33 @@ let rec safeAdd (dict:KvDict) (k:string) (v:string) =
 
 
 let newPair() = 
-    (new Dictionary<string,string>(), new Dictionary<string,string>())
+    new Dictionary<string,string>()
 
 
 let parseStream stream = 
     let mutable vals = new KvDict()
     let mutable oldPath = ""
     
-    let attrStack = new List<KvDict*KvDict>(50)
+    let attrStack = new List<KvDict>(50)
 
     seq {
         for ent in stream do
             match ent with
-                | Val(k,v) ->  
+                | Val(k,v) ->                   
                     let grandp = MList.peek attrStack 2
                     
-                    safeAdd (fst grandp) k v
-                | Attr(k,v) -> 
+                    safeAdd (grandp) k v
+                | Attr(k,v) ->
+                    
                     let parent = MList.peek attrStack 1
-                    safeAdd (snd parent) k v
+                    safeAdd (parent) (sprintf "[%s]" k) v
 
-                | Path (name) -> MList.push attrStack (newPair())
+                | Path (name) ->
+                    MList.push attrStack (newPair())
                 | End(name)-> 
-                    let (fvals, avals) = MList.pop attrStack  
-                    if ((fvals.Count > 0) || (avals.Count > 0)) then
-                        yield {Path = name; Vals = fvals; Attrs=avals}
+                    let fvals = MList.pop attrStack  
+                    if (fvals.Count > 0) then
+                        yield {Path = name; Vals = fvals}
     }                 
 
 type Rule =
@@ -117,14 +125,11 @@ let readConfig fname : Rule[] =
 
 
 let dumpGroups recGroups = 
-    for (g, vlist) in Dict.pairs recGroups do
+    for (g, vlist) in Dict.sortedPairs recGroups do
         printfn "\n%s:" g
         
         for v in vlist do
             printfn "  - %s:" g
-            for (k,v) in Dict.sortedPairs v.Attrs do
-                printfn  "     [%s]: %s" k v
-
             for (k,v) in Dict.sortedPairs v.Vals do
                 printfn "     %s: %s" k v
 
@@ -136,6 +141,9 @@ let sortRecs (recs: seq<XmlRec>) key =
          
         let (ok, v) = r.Vals.TryGetValue(key)
         if ok then v else "")
+    
+let sortBlind (recs: seq<XmlRec>) = 
+    ()
     
     
 type RecordDb(fname) =
@@ -152,10 +160,14 @@ type RecordDb(fname) =
     member x.ApplyRules (rules:Rule[]) =
 
         for (group, recs) in (Dict.sortedPairs groups) do
+            let mutable sorted = false
             for rule in rules do 
                 match rule with
-                    | SortKey(g, key) when g=group -> groups.[g] <- sortRecs recs key
+                    | SortKey(g, key) when g=group ->
+                        sorted <- true 
+                        groups.[g] <- sortRecs recs key
                     | _ -> ()
+                if not sorted then sortBlind recs
 
 [<EntryPoint>]
 
