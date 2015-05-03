@@ -21,6 +21,7 @@ let p_rec (r:XmlRec) =
     for (k,v) in Dict.sortedPairs r.Vals do
         printfn "   %s: %s" k v
 
+
 let readXml (fname:string) =
     let st = new StreamReader(fname)
     use r = XmlReader.Create(st)
@@ -52,8 +53,17 @@ let readXml (fname:string) =
 type KvDict = Dictionary<string,string>
 type StackPair = KvDict*KvDict
 
+let rec safeAdd (dict:KvDict) (k:string) (v:string) =
+     if dict.ContainsKey(k) then 
+        (safeAdd dict (k+"_") v) 
+     else 
+        dict.Add(k,v) 
+    
+
+
 let newPair() = 
     (new Dictionary<string,string>(), new Dictionary<string,string>())
+
 
 let parseStream stream = 
     let mutable vals = new KvDict()
@@ -67,10 +77,10 @@ let parseStream stream =
                 | Val(k,v) ->  
                     let grandp = MList.peek attrStack 2
                     
-                    (fst grandp).Add(k,v)
+                    safeAdd (fst grandp) k v
                 | Attr(k,v) -> 
                     let parent = MList.peek attrStack 1
-                    (snd parent).Add(k,v)
+                    safeAdd (snd parent) k v
 
                 | Path (name) -> MList.push attrStack (newPair())
                 | End(name)-> 
