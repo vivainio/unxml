@@ -51,11 +51,11 @@ While PropertyGroups look like this in XML
 
 ```
 
-Note how element attributes are presented by [square brackets] while tagged elements are represented without square bracketsp
+Note how element attributes are presented by [square brackets] while tagged elements are represented without square brackets.
 
-As you can see, the emitted yaml like format is easier on the eyes, easier to grep and result in more deterministic order (for easier comparison).
+As you can see, the emitted yaml like format is easier on the eyes, easier to grep and result in a more deterministic alphabetic order (for easier comparison).
 
-If you want to specify a sort key so that records always happen in certian order (essential for textual diffs!), you can specify sort order in "rules.txt" in current folder that looks like this:
+If you want to specify a sort key so that records always happen in certain order (essential for textual diffs!), you can specify sort order in "rules.txt" in current folder that looks like this:
 
 ```
 rec PropertyGroup
