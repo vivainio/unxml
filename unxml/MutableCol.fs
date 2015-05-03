@@ -25,6 +25,9 @@ module Dict =
             for k in keys do 
                 yield (k, d.[k])
          }
+    let keys (d:Dictionary<'a, 'b>) = 
+        let kc = d.Keys
+        [for k in kc -> k]
 
 [<AutoOpen>]            
 module MList =

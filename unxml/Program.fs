@@ -141,11 +141,24 @@ let sortRecs (recs: seq<XmlRec>) key =
          
         let (ok, v) = r.Vals.TryGetValue(key)
         if ok then v else "")
-    
-let sortBlind (recs: seq<XmlRec>) = 
-    ()
-    
-    
+ 
+(*    
+let tally (dicts: seq<Dictionary<'a, 'b>>) =
+    let valset = new Dictionary<'a, HashSet<'b>>()
+    for d in dicts do
+        for k,v in Dict.pairs d do
+           
+             
+        
+
+let sortBlind (recs: seq<XmlRec>) =
+     
+    let keySets =
+        recs |> 
+        Seq.map (fun r -> Set.ofSeq (Dict.keys r.Vals))
+    let initial = Seq.head keySets
+  
+ *)  
 type RecordDb(fname) =
     let recs = readXml fname |> parseStream |> Seq.toList 
     let groups = recs |> Seq.groupBy (fun s -> s.Path) |> Dict.ofSeq
@@ -167,7 +180,7 @@ type RecordDb(fname) =
                         sorted <- true 
                         groups.[g] <- sortRecs recs key
                     | _ -> ()
-                if not sorted then sortBlind recs
+                //if not sorted then sortBlind recs
 
 [<EntryPoint>]
 
