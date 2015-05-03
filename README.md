@@ -59,8 +59,5 @@ If you want to specify a sort key so that records always happen in certian order
 
 ```
 rec PropertyGroup
-sort RESOURCE_ID
-rec CMN_ENTITY_CONFIG_ITEM
-sort RESOURCE_ID
-
-
+sort OutputPath
+```
