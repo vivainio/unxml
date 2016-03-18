@@ -11,6 +11,7 @@ type StreamEnt =
     | End of string
 
 type XmlRec = {
+    Parents: string[]
     Path : string
     Vals : Dictionary<string,string>
     //Attrs: Dictionary<string,string>
@@ -76,7 +77,7 @@ let parseStream stream =
     let mutable oldPath = ""
     
     let attrStack = new List<KvDict>(50)
-
+    let parentPaths = new List<string>(50)
     seq {
         for ent in stream do
             match ent with
@@ -91,10 +92,13 @@ let parseStream stream =
 
                 | Path (name) ->
                     MList.push attrStack (newPair())
+                    MList.push parentPaths name
                 | End(name)-> 
-                    let fvals = MList.pop attrStack  
+                    let fvals = MList.pop attrStack
+                    let this = MList.pop parentPaths   
                     if (fvals.Count > 0) then
-                        yield {Path = name; Vals = fvals}
+                        yield {Path = name; Vals = fvals;
+                        Parents = Array.ofSeq parentPaths}
     }                 
 
 type Rule =
@@ -159,6 +163,48 @@ let sortBlind (recs: seq<XmlRec>) =
     let initial = Seq.head keySets
   
  *)  
+
+
+
+let treeView fname = 
+    let stream = List.toArray(readXml fname)
+    let shallows = 
+        seq {
+            for i in [0..stream.Length-3] do
+                let segment = stream.[i], stream.[i+1], stream.[i+2]
+
+                match segment with
+                    | (Path(name), (Val(_,_) | Attr(_, _)), End(_)) ->
+                        yield i
+                        yield i+1
+                    | _ -> ()
+        } |> Set.ofSeq
+
+    let mutable depth = 0
+    let mutable currentPath = ""
+
+    for (idx,ent) in Seq.mapi (fun i x -> i,x) stream do
+        let indent = (String.replicate (depth*2) " ")
+        let shallow = Set.contains idx shallows
+        match ent with
+            | Val(k,v) ->
+                if k = currentPath then 
+                    printfn "%s = %s" (if shallow then "" else indent) v
+                else 
+                    printfn "%s%s: %s" indent k v 
+            | Attr(k,v) ->
+                printfn "%s[%s]: %s" (if shallow then " " else indent)  k v
+                
+            | Path name ->
+                currentPath <- name
+                depth <- depth + 1
+                printf "%s%s%s" indent name (if shallow then "" else "\n")
+               
+            | End(name)-> 
+                depth <- depth - 1
+               
+    ()
+
 type RecordDb(fname) =
     let recs = readXml fname |> parseStream |> Seq.toList 
     let groups = recs |> Seq.groupBy (fun s -> s.Path) |> Dict.ofSeq
@@ -169,7 +215,13 @@ type RecordDb(fname) =
     member x.Dump() = 
         dumpGroups groups
         ()
-   
+    member x.DumpAsTree() = 
+        for r in recs do 
+            let indent = String.replicate r.Parents.Length " "
+            //r.Parents.Length " "
+            printfn "%s%s" indent r.Path
+            for (k,v) in Dict.sortedPairs r.Vals do
+                printfn "%s  %s: %s" indent k v
     member x.ApplyRules (rules:Rule[]) =
 
         for (group, recs) in (Dict.sortedPairs groups) do
@@ -185,15 +237,19 @@ type RecordDb(fname) =
 [<EntryPoint>]
 
 let main argv =
+    // todo arg parsing to change mode
     match argv.Length with 
         | 1 ->
-            let db = RecordDb(argv.[0])
-            let rules = db.ParseRules "rules.txt"
-            db.ApplyRules rules
-            db.Dump()
+            let fname = argv.[0]
+
+            treeView(fname)
+            //let db = RecordDb(argv.[0])
+            //let rules = db.ParseRules "rules.txt"
+            //db.ApplyRules rules
+            //db.Dump()
             0
         | _ ->
-            printfn "Please specif XML file to read."
+            printfn "Please specify XML file to read."
             1       
                
         
