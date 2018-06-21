@@ -37,9 +37,10 @@ Project
   ItemGroup
     Compile [Include]: FileSystemHelper.fs
     Compile [Include]: MutableCol.fs
-    Compile [Include]: Program.fs```
+    Compile [Include]: Program.fs
+```
 
-While it looks like this in original XML
+While it looks like this in original XML:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
