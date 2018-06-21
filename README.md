@@ -68,4 +68,4 @@ While it looks like this in original XML:
 
 Note how element attributes are presented by [square brackets] while tagged elements are represented without square brackets.
 
-As you can see, the emitted yaml like format is easier on the eyes, easier to grep and result in a more deterministic alphabetic order (for easier comparison).
+As you can see, the emitted yaml like format is easier on the eyes and easier to grep.
