@@ -1,10 +1,10 @@
 ﻿open System.Xml
 open System.IO
 open System.Collections.Generic
-open Fake.FileSystemHelper
 open MutableCol
 
-type StreamEnt = 
+
+type StreamEnt =
     | Path of string
     | Val of string * string
     | Attr of string * string
@@ -14,11 +14,10 @@ type XmlRec = {
     Parents: string[]
     Path : string
     Vals : Dictionary<string,string>
-    //Attrs: Dictionary<string,string>
 }
 
-let p_rec (r:XmlRec) = 
-    printfn "%s\n" r.Path 
+let p_rec (r:XmlRec) =
+    printfn "%s\n" r.Path
     for (k,v) in Dict.sortedPairs r.Vals do
         printfn "   %s: %s" k v
 
@@ -30,28 +29,28 @@ let readXml (fname:string) =
     let elems = seq {
         let pars = new Stack<string>()
         let mutable curKey = ""
-         
+
         while r.Read() do
-            match r.NodeType with 
+            match r.NodeType with
                 | XmlNodeType.Element ->
                     curKey <- r.Name
 
                     yield Path(curKey)
-                    while r.MoveToNextAttribute() do 
+                    while r.MoveToNextAttribute() do
                         yield Attr(r.Name, r.Value)
                     r.MoveToElement() |> ignore
                     if r.IsEmptyElement then
                         curKey <- ""
                         yield End(r.Name)
-                                        
-                    
+
+
                 | XmlNodeType.Text ->
                     yield Val(curKey, r.Value)
 
                 | XmlNodeType.EndElement ->
                     curKey <- ""
                     yield End(r.Name)
-                     
+
                 | _ -> ()
     }
     elems |> Seq.toList
@@ -61,49 +60,49 @@ type KvDict = Dictionary<string,string>
 type StackPair = KvDict*KvDict
 
 let rec safeAdd (dict:KvDict) (k:string) (v:string) =
-     if dict.ContainsKey(k) then 
-        (safeAdd dict (k+"_") v) 
-     else 
-        dict.Add(k,v) 
-    
+     if dict.ContainsKey(k) then
+        (safeAdd dict (k+"_") v)
+     else
+        dict.Add(k,v)
 
 
-let newPair() = 
+
+let newPair() =
     new Dictionary<string,string>()
 
 
-let parseStream stream = 
+let parseStream stream =
     let mutable vals = new KvDict()
     let mutable oldPath = ""
-    
+
     let attrStack = new List<KvDict>(50)
     let parentPaths = new List<string>(50)
     seq {
         for ent in stream do
             match ent with
-                | Val(k,v) ->                   
+                | Val(k,v) ->
                     let grandp = MList.peek attrStack 2
-                    
+
                     safeAdd (grandp) k v
                 | Attr(k,v) ->
-                    
+
                     let parent = MList.peek attrStack 1
                     safeAdd (parent) (sprintf "[%s]" k) v
 
                 | Path (name) ->
                     MList.push attrStack (newPair())
                     MList.push parentPaths name
-                | End(name)-> 
+                | End(name)->
                     let fvals = MList.pop attrStack
-                    let this = MList.pop parentPaths   
+                    let this = MList.pop parentPaths
                     if (fvals.Count > 0) then
                         yield {Path = name; Vals = fvals;
                         Parents = Array.ofSeq parentPaths}
-    }                 
+    }
 
 type Rule =
     | SortKey of string*string
-    | Delete of string*string 
+    | Delete of string*string
 
 let readLines (filePath:string) = seq {
     use sr = new StreamReader (filePath)
@@ -111,64 +110,65 @@ let readLines (filePath:string) = seq {
         yield sr.ReadLine ()
 }
 
+
 let readConfig fname : Rule[] =
     let lines = readLines fname
     seq {
         let mutable curRecord = ""
         for line in lines do
             let parts = line.Split()
-            let rule = 
+            let rule =
                 match parts.[0] with
                 | "del" -> Some (Delete(curRecord, parts.[1]))
                 | "sort" -> Some (SortKey(curRecord, parts.[1]))
                 | "rec" -> curRecord <- parts.[1]; None
-                | _ -> failwithf "Invalid rule '%s'" parts.[0] 
-            if rule.IsSome then 
+                | _ -> failwithf "Invalid rule '%s'" parts.[0]
+            if rule.IsSome then
                 yield rule.Value
     } |> Seq.toArray
 
 
-let dumpGroups recGroups = 
+let dumpGroups recGroups =
     for (g, vlist) in Dict.sortedPairs recGroups do
         printfn "\n%s:" g
-        
+
         for v in vlist do
             printfn "  - %s:" g
             for (k,v) in Dict.sortedPairs v.Vals do
                 printfn "     %s: %s" k v
 
 let sortRecs (recs: seq<XmlRec>) key =
-    recs 
+    recs
     |> Seq.sortBy (fun r ->
         //printfn "look for %s" key
         //p_rec r
-         
+
         let (ok, v) = r.Vals.TryGetValue(key)
         if ok then v else "")
- 
-(*    
+
+(*
 let tally (dicts: seq<Dictionary<'a, 'b>>) =
     let valset = new Dictionary<'a, HashSet<'b>>()
     for d in dicts do
         for k,v in Dict.pairs d do
-           
-             
-        
+
+
+
 
 let sortBlind (recs: seq<XmlRec>) =
-     
+
     let keySets =
-        recs |> 
+        recs |>
         Seq.map (fun r -> Set.ofSeq (Dict.keys r.Vals))
     let initial = Seq.head keySets
-  
- *)  
+
+ *)
 
 
 
-let treeView fname = 
+let treeView fname =
     let stream = List.toArray(readXml fname)
-    let shallows = 
+    let shallows =
         seq {
             for i in [0..stream.Length-3] do
                 let segment = stream.[i], stream.[i+1], stream.[i+2]
@@ -188,35 +188,35 @@ let treeView fname =
         let shallow = Set.contains idx shallows
         match ent with
             | Val(k,v) ->
-                if k = currentPath then 
+                if k = currentPath then
                     printfn "%s = %s" (if shallow then "" else indent) v
-                else 
-                    printfn "%s%s: %s" indent k v 
+                else
+                    printfn "%s%s: %s" indent k v
             | Attr(k,v) ->
                 printfn "%s[%s]: %s" (if shallow then " " else indent)  k v
-                
+
             | Path name ->
                 currentPath <- name
                 depth <- depth + 1
                 printf "%s%s%s" indent name (if shallow then "" else "\n")
-               
-            | End(name)-> 
+
+            | End(name)->
                 depth <- depth - 1
-               
+
     ()
 
 type RecordDb(fname) =
-    let recs = readXml fname |> parseStream |> Seq.toList 
+    let recs = readXml fname |> parseStream |> Seq.toList
     let groups = recs |> Seq.groupBy (fun s -> s.Path) |> Dict.ofSeq
-    
-    member x.ParseRules(fname) =
-        if fileExists(fname) then readConfig fname |> Seq.toArray else [||] 
 
-    member x.Dump() = 
+    member x.ParseRules(fname) =
+        if File.Exists(fname) then readConfig fname |> Seq.toArray else [||]
+
+    member x.Dump() =
         dumpGroups groups
         ()
-    member x.DumpAsTree() = 
-        for r in recs do 
+    member x.DumpAsTree() =
+        for r in recs do
             let indent = String.replicate r.Parents.Length " "
             //r.Parents.Length " "
             printfn "%s%s" indent r.Path
@@ -226,10 +226,10 @@ type RecordDb(fname) =
 
         for (group, recs) in (Dict.sortedPairs groups) do
             let mutable sorted = false
-            for rule in rules do 
+            for rule in rules do
                 match rule with
                     | SortKey(g, key) when g=group ->
-                        sorted <- true 
+                        sorted <- true
                         groups.[g] <- sortRecs recs key
                     | _ -> ()
                 //if not sorted then sortBlind recs
@@ -238,7 +238,7 @@ type RecordDb(fname) =
 
 let main argv =
     // todo arg parsing to change mode
-    match argv.Length with 
+    match argv.Length with
         | 1 ->
             let fname = argv.[0]
 
@@ -250,7 +250,6 @@ let main argv =
             0
         | _ ->
             printfn "Please specify XML file to read."
-            1       
-               
-        
-  
+            1
+
+

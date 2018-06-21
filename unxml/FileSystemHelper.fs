@@ -22,7 +22,7 @@ let inline fileSystemInfo path : FileSystemInfo =
 let inline FullName fileName = Path.GetFullPath fileName
 
 /// Gets the directory part of a filename.
-let inline DirectoryName fileName = Path.GetDirectoryName fileName
+//let inline DirectoryName fileName = Path.GetDirectoryName fileName
 
 /// Gets all subdirectories of a given directory.
 let inline subDirectories (dir : DirectoryInfo) = dir.GetDirectories()
