@@ -202,12 +202,20 @@ type RecordDb(fname) =
 
 [<EntryPoint>]
 let main argv =
-    // todo arg parsing to change mode
     match argv.Length with
         | 1 ->
             let fname = argv.[0]
-            treeView(fname)
-            0
+            if File.Exists fname then
+                try
+                    treeView(fname)
+                    0
+                with
+                | :? XmlException as ex ->
+                    printfn "Malformed xml (or no xml at all?). Error: %s" ex.Message
+                    3
+            else
+                printfn "unxml: File not found: '%s'" fname
+                2
         | _ ->
             printfn "Please specify XML file to read."
             1
