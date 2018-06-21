@@ -2,7 +2,13 @@
 
 Simplify and "flatten" XML files.
 
-This command line application was developed for a need to compare XML files (e.g. database/application state dumps). It takes an XML file and "flattens" in to sorted records that are supposed to be easier to read and compare. E.g. a section of this projects unxml.fsproj XML file looks like this:
+## Installation
+
+```
+$ dotnet tool install -g unxml
+```
+
+This command line application was developed for a need to compare XML files (e.g. database/application state dumps). It takes an XML file and "flattens" in to sorted records that are supposed to be easier to read and compare. E.g. a section of this project's unxml.fsproj XML file used to look like this:
 
 ```
 PropertyGroup:
@@ -33,7 +39,7 @@ PropertyGroup:
      WarningLevel: 3
 ```
 
-While PropertyGroups look like this in XML
+While a single PropertyGroup look like this in XML
 
 ```xml
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
