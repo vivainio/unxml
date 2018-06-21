@@ -1,6 +1,7 @@
 ﻿open System.Xml
 open System.IO
 open System.Collections.Generic
+open Fake.FileSystemHelper
 open MutableCol
 
 
@@ -14,6 +15,7 @@ type XmlRec = {
     Parents: string[]
     Path : string
     Vals : Dictionary<string,string>
+    //Attrs: Dictionary<string,string>
 }
 
 let p_rec (r:XmlRec) =
@@ -110,7 +112,6 @@ let readLines (filePath:string) = seq {
         yield sr.ReadLine ()
 }
 
-
 let readConfig fname : Rule[] =
     let lines = readLines fname
     seq {
@@ -145,27 +146,6 @@ let sortRecs (recs: seq<XmlRec>) key =
 
         let (ok, v) = r.Vals.TryGetValue(key)
         if ok then v else "")
-
-(*
-let tally (dicts: seq<Dictionary<'a, 'b>>) =
-    let valset = new Dictionary<'a, HashSet<'b>>()
-    for d in dicts do
-        for k,v in Dict.pairs d do
-
-
-
-
-let sortBlind (recs: seq<XmlRec>) =
-
-    let keySets =
-        recs |>
-        Seq.map (fun r -> Set.ofSeq (Dict.keys r.Vals))
-    let initial = Seq.head keySets
-
- *)
-
-
-
 let treeView fname =
     let stream = List.toArray(readXml fname)
     let shallows =
@@ -210,7 +190,7 @@ type RecordDb(fname) =
     let groups = recs |> Seq.groupBy (fun s -> s.Path) |> Dict.ofSeq
 
     member x.ParseRules(fname) =
-        if File.Exists(fname) then readConfig fname |> Seq.toArray else [||]
+        if fileExists(fname) then readConfig fname |> Seq.toArray else [||]
 
     member x.Dump() =
         dumpGroups groups
