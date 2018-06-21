@@ -1,4 +1,4 @@
-# flatxml
+# Unxml
 Simplify and "flatten" XML files.
 
 This command line application was developed for a need to compare XML files (e.g. database/application state dumps). It takes an XML file and "flattens" in to sorted records that are supposed to be easier to read and compare. E.g. a section of this projects unxml.fsproj XML file looks like this:
@@ -54,10 +54,3 @@ While PropertyGroups look like this in XML
 Note how element attributes are presented by [square brackets] while tagged elements are represented without square brackets.
 
 As you can see, the emitted yaml like format is easier on the eyes, easier to grep and result in a more deterministic alphabetic order (for easier comparison).
-
-If you want to specify a sort key so that records always happen in certain order (essential for textual diffs!), you can specify sort order in "rules.txt" in current folder that looks like this:
-
-```
-rec PropertyGroup
-sort OutputPath
-```
