@@ -15,7 +15,6 @@ type XmlRec = {
     Parents: string[]
     Path : string
     Vals : Dictionary<string,string>
-    //Attrs: Dictionary<string,string>
 }
 
 let p_rec (r:XmlRec) =
@@ -29,7 +28,6 @@ let readXml (fname:string) =
     use r = XmlReader.Create(st)
     r.MoveToElement() |> ignore
     let elems = seq {
-        let pars = new Stack<string>()
         let mutable curKey = ""
 
         while r.Read() do
@@ -74,9 +72,6 @@ let newPair() =
 
 
 let parseStream stream =
-    let mutable vals = new KvDict()
-    let mutable oldPath = ""
-
     let attrStack = new List<KvDict>(50)
     let parentPaths = new List<string>(50)
     seq {
@@ -84,19 +79,16 @@ let parseStream stream =
             match ent with
                 | Val(k,v) ->
                     let grandp = MList.peek attrStack 2
-
                     safeAdd (grandp) k v
                 | Attr(k,v) ->
-
                     let parent = MList.peek attrStack 1
                     safeAdd (parent) (sprintf "[%s]" k) v
-
                 | Path (name) ->
                     MList.push attrStack (newPair())
                     MList.push parentPaths name
                 | End(name)->
                     let fvals = MList.pop attrStack
-                    let this = MList.pop parentPaths
+                    MList.pop parentPaths |> ignore
                     if (fvals.Count > 0) then
                         yield {Path = name; Vals = fvals;
                         Parents = Array.ofSeq parentPaths}
@@ -141,18 +133,15 @@ let dumpGroups recGroups =
 let sortRecs (recs: seq<XmlRec>) key =
     recs
     |> Seq.sortBy (fun r ->
-        //printfn "look for %s" key
-        //p_rec r
-
         let (ok, v) = r.Vals.TryGetValue(key)
         if ok then v else "")
+
 let treeView fname =
     let stream = List.toArray(readXml fname)
     let shallows =
         seq {
             for i in [0..stream.Length-3] do
                 let segment = stream.[i], stream.[i+1], stream.[i+2]
-
                 match segment with
                     | (Path(_), (Val(_) | Attr(_)), End(_)) ->
                         yield i
@@ -174,13 +163,11 @@ let treeView fname =
                     printfn "%s%s: %s" indent k v
             | Attr(k,v) ->
                 printfn "%s[%s]: %s" (if shallow then " " else indent)  k v
-
             | Path name ->
                 currentPath <- name
                 depth <- depth + 1
                 printf "%s%s%s" indent name (if shallow then "" else "\n")
-
-            | End(name)->
+            | End(_)->
                 depth <- depth - 1
 
     ()
@@ -192,17 +179,17 @@ type RecordDb(fname) =
     member __.ParseRules(fname) =
         if fileExists(fname) then readConfig fname |> Seq.toArray else [||]
 
-    member x.Dump() =
+    member __.Dump() =
         dumpGroups groups
         ()
-    member x.DumpAsTree() =
+    member __.DumpAsTree() =
         for r in recs do
             let indent = String.replicate r.Parents.Length " "
             //r.Parents.Length " "
             printfn "%s%s" indent r.Path
             for (k,v) in Dict.sortedPairs r.Vals do
                 printfn "%s  %s: %s" indent k v
-    member x.ApplyRules (rules:Rule[]) =
+    member __.ApplyRules (rules:Rule[]) =
 
         for (group, recs) in (Dict.sortedPairs groups) do
             let mutable sorted = false
