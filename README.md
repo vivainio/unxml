@@ -8,6 +8,8 @@ Simplify and "flatten" XML files.
 $ dotnet tool install -g unxml
 ```
 
+(Yes, you need the dotnetcore 2.1 sdk to run any Global Tools in the first place!)
+
 ## Usage
 
 ```
@@ -17,7 +19,7 @@ $ unxml <xml file name>
 
 ## Introduction
 
-This command line application was developed for a need to compare XML files (e.g. database/application state dumps). It takes an XML file and "flattens" in to sorted records that are easier to read and compare. E.g. this project's unxml.fsproj (the "SDK style" project file) looks like this when run through Unxml:
+This command line application was developed for a need to compare XML files (e.g. database/application state dumps). It takes an XML file and converts it to YAML-like syntax that is easier to read and compare. E.g. this project's unxml.fsproj (the "SDK style" project file) looks like this when run through Unxml:
 
 
 ```yaml
