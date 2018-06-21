@@ -1,4 +1,5 @@
 # Unxml
+
 Simplify and "flatten" XML files.
 
 This command line application was developed for a need to compare XML files (e.g. database/application state dumps). It takes an XML file and "flattens" in to sorted records that are supposed to be easier to read and compare. E.g. a section of this projects unxml.fsproj XML file looks like this:
