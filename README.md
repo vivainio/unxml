@@ -8,9 +8,9 @@ Simplify and "flatten" XML files.
 $ dotnet tool install -g unxml
 ```
 
-This command line application was developed for a need to compare XML files (e.g. database/application state dumps). It takes an XML file and "flattens" in to sorted records that are supposed to be easier to read and compare. E.g. a section of this project's unxml.fsproj XML file used to look like this:
+This command line application was developed for a need to compare XML files (e.g. database/application state dumps). It takes an XML file and "flattens" in to sorted records that are supposed to be easier to read and compare. E.g. a section of this project's unxml.fsproj XML file used to look like this (note how you can use the YAML syntax highlighter!):
 
-```
+```yaml
 PropertyGroup:
   - PropertyGroup:
      AssemblyName: unxml
