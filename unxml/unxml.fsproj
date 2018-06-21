@@ -3,12 +3,18 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
+    <PackAsTool>true</PackAsTool>
+    <Description>Unxml 'pretty-prints' xml files in light, yamly, readable format</Description>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Authors>vivainio</Authors>
+    <Title>unxml</Title>
+    <Copyright>2018 Ville M. Vainio</Copyright>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/vivainio/unxml/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://raw.githubusercontent.com/vivainio/unxml/master/README.md</PackageProjectUrl>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="FileSystemHelper.fs"/>
     <Compile Include="MutableCol.fs"/>
     <Compile Include="Program.fs" />
   </ItemGroup>
-
 </Project>
