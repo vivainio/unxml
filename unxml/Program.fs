@@ -154,7 +154,7 @@ let treeView fname =
                 let segment = stream.[i], stream.[i+1], stream.[i+2]
 
                 match segment with
-                    | (Path(name), (Val(_,_) | Attr(_, _)), End(_)) ->
+                    | (Path(_), (Val(_) | Attr(_)), End(_)) ->
                         yield i
                         yield i+1
                     | _ -> ()
@@ -189,7 +189,7 @@ type RecordDb(fname) =
     let recs = readXml fname |> parseStream |> Seq.toList
     let groups = recs |> Seq.groupBy (fun s -> s.Path) |> Dict.ofSeq
 
-    member x.ParseRules(fname) =
+    member __.ParseRules(fname) =
         if fileExists(fname) then readConfig fname |> Seq.toArray else [||]
 
     member x.Dump() =
@@ -212,21 +212,14 @@ type RecordDb(fname) =
                         sorted <- true
                         groups.[g] <- sortRecs recs key
                     | _ -> ()
-                //if not sorted then sortBlind recs
 
 [<EntryPoint>]
-
 let main argv =
     // todo arg parsing to change mode
     match argv.Length with
         | 1 ->
             let fname = argv.[0]
-
             treeView(fname)
-            //let db = RecordDb(argv.[0])
-            //let rules = db.ParseRules "rules.txt"
-            //db.ApplyRules rules
-            //db.Dump()
             0
         | _ ->
             printfn "Please specify XML file to read."
