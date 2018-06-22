@@ -63,7 +63,7 @@ let treeView fname =
                     match stream.[idx+1], stream.[idx+2], stream.[idx+3] with
                     | Val(_,v), End(_), _ ->
                         idx <- idx + 1
-                        sprintf " = %s" v
+                        sprintf ": %s" v
                     | (Val(k,v) | Attr(k,v)), End(_), _ ->
                         idx <- idx + 1
                         sprintf " [%s]: %s" k v
