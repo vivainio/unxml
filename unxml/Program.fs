@@ -60,13 +60,16 @@ let treeView fname =
                 depth <- depth + 1
                 // peek ahead for shallow or hero; if so nuke the attribute
                 let extra =
-                    match stream.[idx+1], stream.[idx+2] with
-                    | Val(_,v), End(_) ->
+                    match stream.[idx+1], stream.[idx+2], stream.[idx+3] with
+                    | Val(_,v), End(_), _ ->
                         idx <- idx + 1
                         sprintf " = %s" v
-                    | (Val(k,v) | Attr(k,v)), End(_) ->
+                    | (Val(k,v) | Attr(k,v)), End(_), _ ->
                         idx <- idx + 1
                         sprintf " [%s]: %s" k v
+                    | Attr(ak,av), Val(_,vv), End(_) ->
+                        idx <- idx + 2
+                        sprintf " [%s]: %s = %s" ak av vv
                     | _ -> ""
                 printfn "%s%s%s" indent name extra
 
