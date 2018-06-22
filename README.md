@@ -1,63 +1,71 @@
-# flatxml
+# Unxml
+
 Simplify and "flatten" XML files.
 
-This command line application was developed for a need to compare XML files (e.g. database/application state dumps). It takes an XML file and "flattens" in to sorted records that are supposed to be easier to read and compare. E.g. a section of this projects unxml.fsproj XML file looks like this:
+## Installation
 
 ```
-PropertyGroup:
-  - PropertyGroup:
-     AssemblyName: unxml
-     AutoGenerateBindingRedirects: true
-     Configuration: Debug
-     Name: unxml
-     OutputType: Exe
-     Platform: AnyCPU
-     ProjectGuid: 6b2684f4-360e-4877-92c6-57c00911eaf9
-     RootNamespace: unxml
-     SchemaVersion: 2.0
-     TargetFSharpCoreVersion: 4.4.0.0
-     TargetFrameworkVersion: v4.5
-  - PropertyGroup:
-     [Condition]:  '$(Configuration)|$(Platform)' == 'Debug|AnyCPU'
-     DebugSymbols: true
-     DebugType: full
-     DefineConstants: DEBUG;TRACE
-     DocumentationFile: bin\Debug\unxml.XML
-     Optimize: false
-     OutputPath: bin\Debug\
-     PlatformTarget: AnyCPU
-     Prefer32Bit: true
-     StartArguments: FSharp.Core.xml
-     Tailcalls: false
-     WarningLevel: 3
+$ dotnet tool install -g unxml
 ```
 
-While PropertyGroups look like this in XML
+(Yes, you need the dotnetcore 2.1 sdk to run any Global Tools in the first place!)
+
+## Usage
+
+```
+$ unxml <xml file name>
+```
+
+
+## Introduction
+
+This command line application was developed for a need to compare XML files (e.g. database/application state dumps). It takes an XML file and converts it to YAML-like syntax that is easier to read and compare. E.g. this project's unxml.fsproj (the "SDK style" project file) looks like this when run through Unxml:
+
+
+```yaml
+Project
+  [Sdk]: Microsoft.NET.Sdk
+  PropertyGroup
+    OutputType = Exe
+    TargetFramework = netcoreapp2.1
+    PackAsTool = true
+    Description = Unxml 'pretty-prints' xml files in light, yamly, readable format
+    PackageVersion = 1.0.0
+    Authors = vivainio
+    Title = unxml
+    Copyright = 2018 Ville M. Vainio
+    PackageLicenseUrl = https://raw.githubusercontent.com/vivainio/unxml/master/LICENSE
+    PackageProjectUrl = https://raw.githubusercontent.com/vivainio/unxml/master/README.md
+  ItemGroup
+    Compile [Include]: FileSystemHelper.fs
+    Compile [Include]: MutableCol.fs
+    Compile [Include]: Program.fs
+```
+
+While it looks like this in original XML:
 
 ```xml
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <Tailcalls>false</Tailcalls>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <WarningLevel>3</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DocumentationFile>bin\Debug\unxml.XML</DocumentationFile>
-    <Prefer32Bit>true</Prefer32Bit>
-    <StartArguments>FSharp.Core.xml</StartArguments>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <PackAsTool>true</PackAsTool>
+    <Description>Unxml 'pretty-prints' xml files in light, yamly, readable format</Description>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Authors>vivainio</Authors>
+    <Title>unxml</Title>
+    <Copyright>2018 Ville M. Vainio</Copyright>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/vivainio/unxml/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://raw.githubusercontent.com/vivainio/unxml/master/README.md</PackageProjectUrl>
   </PropertyGroup>
-
+  <ItemGroup>
+    <Compile Include="FileSystemHelper.fs"/>
+    <Compile Include="MutableCol.fs"/>
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+</Project>
 ```
 
 Note how element attributes are presented by [square brackets] while tagged elements are represented without square brackets.
 
-As you can see, the emitted yaml like format is easier on the eyes, easier to grep and result in a more deterministic alphabetic order (for easier comparison).
-
-If you want to specify a sort key so that records always happen in certain order (essential for textual diffs!), you can specify sort order in "rules.txt" in current folder that looks like this:
-
-```
-rec PropertyGroup
-sort OutputPath
-```
+As you can see, the emitted yaml like format is easier on the eyes and easier to grep.
