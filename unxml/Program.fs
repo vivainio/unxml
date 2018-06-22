@@ -9,7 +9,7 @@ type StreamEnt =
 
 
 let readXml (fname:string) : StreamEnt list =
-    let st = new StreamReader(fname)
+    use st = new StreamReader(fname)
     use r = XmlReader.Create(st)
     r.MoveToElement() |> ignore
     let elems = seq {
@@ -28,7 +28,6 @@ let readXml (fname:string) : StreamEnt list =
                         curKey <- ""
                         yield End(r.Name)
 
-
                 | XmlNodeType.Text ->
                     yield Val(curKey, r.Value)
 
@@ -40,47 +39,40 @@ let readXml (fname:string) : StreamEnt list =
     }
     elems |> Seq.toList
 
-let readLines (filePath:string) = seq {
-    use sr = new StreamReader (filePath)
-    while not sr.EndOfStream do
-        yield sr.ReadLine ()
-}
-
 let treeView fname =
     let stream = List.toArray(readXml fname)
-    let shallows =
-        seq {
-            for i in [0..stream.Length-3] do
-                let segment = stream.[i], stream.[i+1], stream.[i+2]
-                match segment with
-                    | (Path(_), (Val(_) | Attr(_)), End(_)) ->
-                        yield i
-                        yield i+1
-                    | _ -> ()
-        } |> Set.ofSeq
 
     let mutable depth = 0
     let mutable currentPath = ""
-
-    //for (idx,ent) in Array.mapi (fun i x -> i,x) stream do
-    stream |> Array.iteri (fun idx ent ->
+    let mutable idx = 0
+    while idx < stream.Length do
+        let ent = stream.[idx]
         let indent = (String.replicate (depth*2) " ")
-        let shallow = Set.contains idx shallows
         match ent with
-            | Val(k,v) ->
-                if k = currentPath then
-                    printfn "%s = %s" (if shallow then "" else indent) v
-                else
-                    printfn "%s%s: %s" indent k v
+            // this is only entered when there is tag with attribute and text content
+            | Val(_,v)  ->
+                printfn "%s= %s" indent v
+            // non-shallow attribute
             | Attr(k,v) ->
-                printfn "%s[%s]: %s" (if shallow then " " else indent)  k v
+                printfn "%s[%s]: %s" indent k v
             | Path name ->
                 currentPath <- name
                 depth <- depth + 1
-                printf "%s%s%s" indent name (if shallow then "" else "\n")
+                // peek ahead for shallow or hero; if so nuke the attribute
+                let extra =
+                    match stream.[idx+1], stream.[idx+2] with
+                    | Val(_,v), End(_) ->
+                        idx <- idx + 1
+                        sprintf " = %s" v
+                    | (Val(k,v) | Attr(k,v)), End(_) ->
+                        idx <- idx + 1
+                        sprintf " [%s]: %s" k v
+                    | _ -> ""
+                printfn "%s%s%s" indent name extra
+
             | End(_)->
                 depth <- depth - 1
-    )
+        idx <- idx+1
 
 [<EntryPoint>]
 let main argv =
