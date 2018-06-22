@@ -16,7 +16,7 @@ nuke(prjdir + "/bin")
 nuke(prjdir + "/obj")
 
 def pack():
-    c("dotnet pack -c release /p:Version=%s" % version)
+    c("dotnet pack -c Release /p:Version=%s" % version)
 
 os.chdir(prjdir)
 pack()
