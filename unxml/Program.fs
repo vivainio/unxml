@@ -62,7 +62,8 @@ let treeView fname =
     let mutable depth = 0
     let mutable currentPath = ""
 
-    for (idx,ent) in Seq.mapi (fun i x -> i,x) stream do
+    //for (idx,ent) in Array.mapi (fun i x -> i,x) stream do
+    stream |> Array.iteri (fun idx ent ->
         let indent = (String.replicate (depth*2) " ")
         let shallow = Set.contains idx shallows
         match ent with
@@ -79,8 +80,7 @@ let treeView fname =
                 printf "%s%s%s" indent name (if shallow then "" else "\n")
             | End(_)->
                 depth <- depth - 1
-
-    ()
+    )
 
 [<EntryPoint>]
 let main argv =
