@@ -49,7 +49,7 @@ let treeView fname =
         let ent = stream.[idx]
         let indent = (String.replicate (depth*2) " ")
         match ent with
-            // this is only entered when there is tag with attribute and text content
+            // This case should not be possible anymore due to skipping in |Path
             | Val(_,v)  ->
                 printfn "%s= %s" indent v
             // non-shallow attribute
@@ -64,7 +64,7 @@ let treeView fname =
                     | Val(_,v), End(_), _ ->
                         idx <- idx + 1
                         sprintf ": %s" v
-                    | (Val(k,v) | Attr(k,v)), End(_), _ ->
+                    | Attr(k,v), End(_), _ ->
                         idx <- idx + 1
                         sprintf " [%s]: %s" k v
                     | Attr(ak,av), Val(_,vv), End(_) ->
