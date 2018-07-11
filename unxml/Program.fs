@@ -7,9 +7,14 @@ type StreamEnt =
     | Attr of string * string
     | End of string
 
+let streamWithoutEntities fname =
+    let cont = File.ReadAllText(fname)
+    let newCont = cont.Replace("&", "&amp;")
+    new StringReader(newCont) :> TextReader
 
 let readXml (fname:string) : StreamEnt list =
-    use st = new StreamReader(fname)
+
+    use st = if fname.EndsWith(".html") then streamWithoutEntities fname else new StreamReader(fname) :> TextReader
     use r = XmlReader.Create(st)
     r.MoveToElement() |> ignore
     let elems = seq {
@@ -54,22 +59,24 @@ let treeView fname =
                 printfn "%s= %s" indent v
             // non-shallow attribute
             | Attr(k,v) ->
-                printfn "%s[%s]: %s" indent k v
+                printfn "%s%s = %s" indent k v
             | Path name ->
                 currentPath <- name
                 depth <- depth + 1
                 // peek ahead for shallow or hero; if so nuke the attribute
                 let extra =
                     match stream.[idx+1], stream.[idx+2], stream.[idx+3] with
+
                     | Val(_,v), End(_), _ ->
                         idx <- idx + 1
                         sprintf ": %s" v
                     | Attr(k,v), End(_), _ ->
                         idx <- idx + 1
-                        sprintf " [%s]: %s" k v
-                    | Attr(ak,av), Val(_,vv), End(_) ->
+                        // node attr= value is unambiguous
+                        sprintf " %s= %s" k v
+                    | Attr(ak,av), Val(_,vv), End(_) when av.Length + vv.Length < 100 ->
                         idx <- idx + 2
-                        sprintf " [%s]: %s = %s" ak av vv
+                        sprintf " %s= %s ::: %s" ak av vv
                     | _ -> ""
                 printfn "%s%s%s" indent name extra
 
