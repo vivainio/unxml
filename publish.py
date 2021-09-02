@@ -2,7 +2,7 @@ from __future__ import print_function
 import os,shutil
 
 prjdir = "unxml"
-version = "1.2.0.0"
+version = "1.4.0.0"
 def c(s):
     print(">",s)
     err = os.system(s)
